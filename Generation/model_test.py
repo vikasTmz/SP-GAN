@@ -99,9 +99,9 @@ class Model(object):
 
         if self.ball is None:
             if static:
-                self.ball = np.loadtxt('template/2048.xyz')[:, :3]
+                self.ball = np.loadtxt('template/balls/2048.xyz')[:, :3]
             else:
-                self.ball = np.loadtxt('template/ball2.xyz')[:, :3]
+                self.ball = np.loadtxt('template/balls/ball2.xyz')[:, :3]
             self.ball = pc_normalize(self.ball)
 
         if static:
@@ -304,7 +304,7 @@ class Model(object):
         pcds_list = []
         title_list = []
 
-        alphas = np.arange(1, -0.1, -0.2)
+        alphas = np.arange(1, -0.1, -0.1)
 
         x = self.sphere_generator(bs=len(alphas))
 
