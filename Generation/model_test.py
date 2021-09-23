@@ -133,9 +133,6 @@ class Model(object):
 
         return ball
 
-
-
-
     def simple_gen(self,number=50):
 
         self.build_model_eval()
@@ -974,6 +971,20 @@ class Model(object):
             plot_pcd_multi_rows_single_color(plot_name, pcds_list, title_list, colors=color)
 
         del self.G
+
+    # def optimize(self, vars_to_optimize, iterations=500, learning_rate=1.):
+    #     vars_to_optimize = vars_to_optimize if isinstance(vars_to_optimize, list) else [vars_to_optimize]
+    #     optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
+    #     min_op = optimizer.minimize(self.loss, var_list=[vars_to_optimize])
+    #     for _ in range(iterations):
+    #         _, loss = self.sess.run([min_op, self.loss])
+    #         yield loss
+
+        # pbar = tqdm(op, leave=False, total=args.iterations)
+        # for loss in pbar:
+        #     pbar.set_description(' '.join(names)+' Loss: %.2f' % loss)
+        # print(' '.join(names), ' loss:', loss)
+
 
     def load(self, checkpoint_dir):
         if self.opts.pretrain_model_G is None  and self.opts.pretrain_model_D is None:

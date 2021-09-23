@@ -36,4 +36,6 @@ if __name__ == '__main__':
     #model.draw_part_exchange() # exchange the noise vector of two regions of two shape
 
 
+    # model.latent_optimization()
+
 
