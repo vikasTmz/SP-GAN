@@ -133,10 +133,10 @@ def main():
 
     # initialize deformer
     # input points
-    sample_points = 512
+    sample_points = 1024
     mesh_gt = trimesh.load(args_eval.input_path)
     mesh_v = np.array(mesh_gt.vertices)
-    inputs = mesh_gt.sample(sample_points)
+    points = mesh_gt.sample(sample_points)
 
     # dataloader
     data_root = args.data_root
