@@ -128,7 +128,7 @@ embedder = LatentEmbedder(point_dataset, mesh_dataset, deformer, topk=5)
 inputs = mesh_gt.sample(sample_points) + np.random.randn(sample_points, 3) * 0.005
 print(inputs.shape)
 export_obj_cpu('inputs_subsampled.obj',inputs,random_trans=[-1.5,0,0])
-exit()
+
 input_pts = torch.tensor(inputs)[None].to(device)
 lat_codes_pre, lat_codes_post = embedder.embed(input_pts, matching="two_way", verbose=True, lr=1e-2, embedding_niter=30, finetune_niter=30, bs=8, seed=1)
 
