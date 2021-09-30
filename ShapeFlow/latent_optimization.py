@@ -5,21 +5,37 @@ import json
 import os
 from tqdm import tqdm as tqdm
 import matplotlib.pyplot as plt
-%matplotlib inline
+
 import numpy as np
 from types import SimpleNamespace
 from utils import render
 from shapenet_dataloader import ShapeNetMesh, FixedPointsCachedDataset
-from deepdeform.layers.deformation_layer import NeuralFlowDeformer
+from shapeflow.layers.deformation_layer import NeuralFlowDeformer
 from shapenet_embedding import LatentEmbedder
-import deepdeform.utils.train_utils as utils
+import shapeflow.utils.train_utils as utils
 from torch.utils.data import DataLoader
 import pickle
 import time
 from utils import render
 
+
+def export_obj_cpu(filename, pc, colors=None, random_trans=[0,0,0]):
+    # random_trans = random.uniform(1, 2)
+    with open('%s'%(filename), 'w') as f:
+        for i,p in enumerate(pc):
+            x,y,z = p
+            x += random_trans[0]
+            y += random_trans[1]
+            z += random_trans[2]
+            r,g,b = [1,0,0]
+            if colors is not None:
+                r,g,b = colors[i]
+            f.write('v {:.4f} {:.4f} {:.4f} \
+                    {:.4f} {:.4f} {:.4f} \n'.format(x, y, z, r, g, b))
+
+
 # choice of checkpoint to load
-run_dir = "/media/andy/Elements/Shapeflow_data/runs/pretrained_symm128"
+run_dir = "/media/andy/Elements/Shapeflow_data/runs/pretrained_ckpt"
 checkpoint = "checkpoint_latest.pth.tar_deepdeform_100.pth.tar"
 device = torch.device("cuda")
 
@@ -42,19 +58,19 @@ start_ep = resume_dict["epoch"]
 global_step = resume_dict["global_step"]
 tracked_stats = resume_dict["tracked_stats"]
 deformer.load_state_dict(resume_dict["deformer_state_dict"])
-
+sample_points = 300
 # dataloader
 data_root = args.data_root.replace('shapenet_watertight', 'shapenet_simplified')
-mesh_dataset = ShapeNetMesh(data_root=data_root, split="train", category=args.category, 
+mesh_dataset = ShapeNetMesh(data_root=data_root, split="train", category='chair', 
                             normals=False)
-point_dataset = FixedPointsCachedDataset("/media/andy/Elements/Shapeflow_data/data/shapenet_train.pkl", npts=512)
+point_dataset = FixedPointsCachedDataset("/media/andy/Elements/Shapeflow_data/data/shapenet_pointcloud/train/03001627.pkl", npts=sample_points)
 
 
 # take a sample point cloud from a shape
-p = pickle.load(open("/media/andy/Elements/Shapeflow_data/data/shapenet_val.pkl", "rb"))
+p = pickle.load(open("/media/andy/Elements/Shapeflow_data/data/shapenet_pointcloud/val/03001627.pkl", "rb"))
 name = list(p.keys())[2]
 input_points = p[name]
-mesh_gt = trimesh.load("/media/andy/Elements/Shapeflow_data/data/shapenet_simplified/"+name+"/model.ply")
+mesh_gt = trimesh.load("/media/andy/Elements/Shapeflow_data/data/shapenet_simplified/val/03001627/bcc73b8ff332b4df3d25ee35360a1f4d/model.ply")
 
 # view point
 eye_1 = [.8, .4, .5]
@@ -71,7 +87,7 @@ def rgb2rgba(rgb):
     return rgba
 
 # subsample points
-point_subsamp = mesh_gt.sample(512)
+point_subsamp = mesh_gt.sample(sample_points)
 
 # img_mesh, _, _, _ = render.render_trimesh(mesh_gt, eye_1, center, up, light_intensity=3)
 # img_pt_sub, _, _, _ = render.render_trimesh(trimesh.PointCloud(point_subsamp), 
@@ -108,7 +124,9 @@ embedder = LatentEmbedder(point_dataset, mesh_dataset, deformer, topk=5)
 
 # inputs = input_points[:2048] 
 # inputs = points_unproj
-inputs = mesh_gt.sample(300) + np.random.randn(300, 3) * 0.005
+inputs = mesh_gt.sample(sample_points) + np.random.randn(sample_points, 3) * 0.005
+print(inputs.shape)
+export_obj_cpu('inputs.obj',inputs)
 input_pts = torch.tensor(inputs)[None].to(device)
 lat_codes_pre, lat_codes_post = embedder.embed(input_pts, matching="two_way", verbose=True, lr=1e-2, embedding_niter=30, finetune_niter=30, bs=8, seed=1)
 
@@ -126,9 +144,10 @@ for pick_idx in range(5):
     mesh = trimesh.Trimesh(v, f)
     vo, fo = orig_meshes_[pick_idx]
     mesh_o = trimesh.Trimesh(vo, fo)
-    img_orig, _, _, _ = render.render_trimesh(mesh_o.copy(), eye_1, center, up, res=(512,512), light_intensity=8)
-    colors = np.zeros_like(inputs[:512]); colors[:, 1] = 1.;
-    
+    # img_orig, _, _, _ = render.render_trimesh(mesh_o.copy(), eye_1, center, up, res=(512,512), light_intensity=8)
+    colors = np.zeros_like(inputs[:sample_points]); colors[:, 1] = 1.;
+    export_obj_cpu("latent-opt_deformed_%d.obj"%(pick_idx), v,random_trans=[pick_idx*1.5,0,0])
+    export_obj_cpu("latent-opt_orig_%d.obj"%(pick_idx), vo,random_trans=[pick_idx*1.5,2,0])
     # img_def, _, _, _ = render.render_trimesh([mesh.copy(),
     #                                          ],#trimesh.PointCloud(inputs[:512], colors=colors)], 
     #                                          eye_1, center, up, res=(512,512), light_intensity=8,
