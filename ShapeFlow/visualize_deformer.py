@@ -376,7 +376,8 @@ def new_observation():
         mo.visual.vertex_colors = color.copy()
         md_ = md.copy()#; md_.vertices *= 0.5
         mo_ = mo.copy()
-        print(idx, md_.vertices.shape, mo_.vertices.shape)
+        export_obj_cpu('md_%s.obj'%(str(i)), md_.vertices, random_trans=[i,0,0])
+        export_obj_cpu('mo_%s.obj'%(str(i)), mo_.vertices, random_trans=[i,2,0])
         # img_tar, _, _, _ = render.render_trimesh(md_, eye_1, center, up, res=(224, 224))
         # img_src, _, _, _ = render.render_trimesh(mo_, eye_1, center, up, res=(224, 224))
         
