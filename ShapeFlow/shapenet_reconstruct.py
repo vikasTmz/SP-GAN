@@ -56,7 +56,7 @@ def get_args():
     parser.add_argument(
         "--input_path",
         type=str,
-        default="/media/andy/Elements/Shapeflow_data/data/shapenet_simplified/train/03001627/5d8736041ded1ac7de03ab2a27ba7531/model.ply",
+        default="/media/andy/Elements/Shapeflow_data/data/shapenet_simplified/val/03001627/c4f9249def12870a2b3e9b6eb52d35df/model.ply",
         help="path to input points (.ply file).",
     )
     parser.add_argument(
