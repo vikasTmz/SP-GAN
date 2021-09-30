@@ -88,6 +88,7 @@ def rgb2rgba(rgb):
 
 # subsample points
 point_subsamp = mesh_gt.sample(sample_points)
+export_obj_cpu('inputs_fullpc.obj',mesh_gt.sample(2048),random_trans=[-3,0,0])
 
 # img_mesh, _, _, _ = render.render_trimesh(mesh_gt, eye_1, center, up, light_intensity=3)
 # img_pt_sub, _, _, _ = render.render_trimesh(trimesh.PointCloud(point_subsamp), 
@@ -126,7 +127,8 @@ embedder = LatentEmbedder(point_dataset, mesh_dataset, deformer, topk=5)
 # inputs = points_unproj
 inputs = mesh_gt.sample(sample_points) + np.random.randn(sample_points, 3) * 0.005
 print(inputs.shape)
-export_obj_cpu('inputs.obj',inputs)
+export_obj_cpu('inputs_subsampled.obj',inputs,random_trans=[-1.5,0,0])
+exit()
 input_pts = torch.tensor(inputs)[None].to(device)
 lat_codes_pre, lat_codes_post = embedder.embed(input_pts, matching="two_way", verbose=True, lr=1e-2, embedding_niter=30, finetune_niter=30, bs=8, seed=1)
 
