@@ -56,7 +56,8 @@ def get_args():
     parser.add_argument(
         "--input_path",
         type=str,
-        default="/media/andy/Elements/Shapeflow_data/data/shapenet_simplified/val/03001627/c4f9249def12870a2b3e9b6eb52d35df/model.ply",
+        default="input_obj.ply",
+        # default="/media/andy/Elements/Shapeflow_data/data/shapenet_simplified/val/03001627/c4f9249def12870a2b3e9b6eb52d35df/model.ply",
         # default="/media/andy/Elements/Shapeflow_data/data/shapenet_simplified/val/03001627/bcc73b8ff332b4df3d25ee35360a1f4d/model.ply",
         help="path to input points (.ply file).",
     )
@@ -137,11 +138,10 @@ def main():
     sample_points = 1024
     mesh_gt = trimesh.load(args_eval.input_path)
     mesh_v = np.array(mesh_gt.vertices)
-    # points = mesh_gt.sample(sample_points)
-    print(mesh_v.shape)
-    points = mesh_v[:1024]
+    points = mesh_gt.sample(sample_points)
+    # print(mesh_v.shape)
+    # points = mesh_v[:1024]
     export_obj_cpu('shapenet_recon_input.obj', points, random_trans=[-1.5,0,0])
-    exit()
     # dataloader
     data_root = args.data_root
     mesh_dataset = ShapeNetMesh(
