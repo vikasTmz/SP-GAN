@@ -129,7 +129,7 @@ dmypy.json
 .pyre/
 
 # Meshes
-*.ply
+#*.ply
 
 # VSCode
 .vscode
