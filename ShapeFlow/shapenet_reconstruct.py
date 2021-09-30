@@ -72,14 +72,14 @@ def get_args():
         "-ne",
         "--embedding_niter",
         type=int,
-        default=50,
+        default=30,
         help="number of embedding iterations.",
     )
     parser.add_argument(
         "-nf",
         "--finetune_niter",
         type=int,
-        default=50,
+        default=30,
         help="number of finetuning iterations.",
     )
     parser.add_argument(
@@ -137,6 +137,8 @@ def main():
     mesh_gt = trimesh.load(args_eval.input_path)
     mesh_v = np.array(mesh_gt.vertices)
     points = mesh_gt.sample(sample_points)
+    points = points[:512]
+    sample_points = 512
     export_obj_cpu('shapenet_recon_input.obj', points, random_trans=[-1.5,0,0])
     # dataloader
     data_root = args.data_root
