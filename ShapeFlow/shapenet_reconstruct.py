@@ -137,7 +137,8 @@ def main():
     mesh_gt = trimesh.load(args_eval.input_path)
     mesh_v = np.array(mesh_gt.vertices)
     points = mesh_gt.sample(sample_points)
-    export_obj_cpu('shapenet_recon_input.obj', points, random_trans=[-1.5,0,0])
+    export_obj_cpu('shapenet_recon_input_mesh.obj', mesh_v, random_trans=[-3,0,0])
+    exit()
     # dataloader
     data_root = args.data_root
     mesh_dataset = ShapeNetMesh(
