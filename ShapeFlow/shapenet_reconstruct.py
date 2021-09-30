@@ -140,6 +140,7 @@ def main():
     points = points[:512]
     sample_points = 512
     export_obj_cpu('shapenet_recon_input.obj', points, random_trans=[-1.5,0,0])
+    exit()
     # dataloader
     data_root = args.data_root
     mesh_dataset = ShapeNetMesh(
