@@ -475,7 +475,11 @@ class LatentEmbedder(object):
             canonical_source = self.deformer(source_points, torch.stack([src_latent, zeros], dim=1))
             canonical_target = self.deformer(target_points, torch.stack([tar_latent, zeros], dim=1))
 
+        closests = torch.cdist(canonical_target,
+                            canonical_source,p=2)
+        closests = torch.argsort(closests[0,:,:], dim=1)
+
         export_obj_cpu('canonical_source.obj', canonical_source[0].detach().clone(), source_points[0].detach().clone(), random_trans=[0,1.5,0])
-        export_obj_cpu('canonical_target.obj', canonical_target[0].detach().clone(), source_points[0].detach().clone(), random_trans=[1.5,1.5,0])
+        export_obj_cpu('canonical_target.obj', canonical_target[0].detach().clone(), source_points[0,closests[:,0],:].detach().clone(), random_trans=[1.5,1.5,0])
         export_obj_cpu('targetpts.obj', target_points[0].detach().clone(), source_points[0].detach().clone(), random_trans=[1.5,0,0])
         export_obj_cpu('sourcepts.obj', source_points[0].detach().clone(), source_points[0].detach().clone(), random_trans=[0,0,0])
