@@ -293,8 +293,8 @@ def main():
             lat_codes_pre_2,
             torch.tensor(points_1)[None].to(device),
             torch.tensor(points_2)[None].to(device),
-            torch.tensor(mesh_1.colors[:sample_points])[None].to(device),
-            torch.tensor(mesh_2.colors[:sample_points])[None].to(device),
+            torch.tensor(mesh_1.colors[i:i+sample_points])[None].to(device),
+            torch.tensor(mesh_2.colors[i:i+sample_points])[None].to(device),
             str(i),
             mesh_2
         )
