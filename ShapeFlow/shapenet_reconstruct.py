@@ -140,14 +140,14 @@ def get_args():
         "-ne",
         "--embedding_niter",
         type=int,
-        default=25,
+        default=30,
         help="number of embedding iterations.",
     )
     parser.add_argument(
         "-nf",
         "--finetune_niter",
         type=int,
-        default=25,
+        default=30,
         help="number of finetuning iterations.",
     )
     parser.add_argument(
@@ -194,7 +194,7 @@ def main():
 
     # initialize deformer
     # input points
-    sample_points = 1024
+    sample_points = 2048
     # mesh_1 = trimesh.load(args_eval.input_path_1)
     # mesh_2 = trimesh.load(args_eval.input_path_2)
 
@@ -284,12 +284,24 @@ def main():
 
     # retrieve deformed models
     embedder.dense_correspondence(
+        lat_codes_pre_1,
+        lat_codes_pre_2,
+        torch.tensor(points_1)[None].to(device),
+        torch.tensor(points_2)[None].to(device),
+        torch.tensor(mesh_1.colors[:sample_points])[None].to(device),
+        torch.tensor(mesh_2.colors[:sample_points])[None].to(device),
+        "pre"
+    )
+
+    # retrieve deformed models
+    embedder.dense_correspondence(
         lat_codes_post_1,
         lat_codes_post_2,
         torch.tensor(points_1)[None].to(device),
         torch.tensor(points_2)[None].to(device),
         torch.tensor(mesh_1.colors[:sample_points])[None].to(device),
-        torch.tensor(mesh_2.colors[:sample_points])[None].to(device)
+        torch.tensor(mesh_2.colors[:sample_points])[None].to(device),
+        "post"
     )
 
     print("Done deforming new shapes...")

@@ -437,7 +437,8 @@ class LatentEmbedder(object):
             src_pts,
             tar_pts,
             src_colors,
-            tar_colors):
+            tar_colors,
+            prefix):
 
         if not isinstance(lat_codes_src, torch.Tensor):
             lat_codes_src = torch.tensor(lat_codes_src).float().to(self.device)
@@ -490,7 +491,7 @@ class LatentEmbedder(object):
                             canonical_source,p=2)
         closests = torch.argsort(closests[0,:,:], dim=1)
 
-        export_obj_cpu('canonical_source.obj', canonical_source[0].detach().clone(), src_colors[0].detach().clone(), random_trans=[0,1.5,0])
-        export_obj_cpu('canonical_target.obj', canonical_target[0].detach().clone(), src_colors[0,closests[:,0],:].detach().clone(), random_trans=[1.5,1.5,0])
-        export_obj_cpu('targetpts.obj', target_points[0].detach().clone(), src_colors[0,closests[:,0],:].detach().clone(), random_trans=[1.5,0,0])
-        export_obj_cpu('sourcepts.obj', source_points[0].detach().clone(), src_colors[0].detach().clone(), random_trans=[0,0,0])
+        export_obj_cpu('canonical_source_%s.obj'%(prefix), canonical_source[0].detach().clone(), src_colors[0].detach().clone(), random_trans=[0,1.5,0])
+        export_obj_cpu('canonical_target_%s.obj'%(prefix), canonical_target[0].detach().clone(), src_colors[0,closests[:,0],:].detach().clone(), random_trans=[1.5,1.5,0])
+        export_obj_cpu('targetpts_%s.obj'%(prefix), target_points[0].detach().clone(), src_colors[0,closests[:,0],:].detach().clone(), random_trans=[1.5,0,0])
+        export_obj_cpu('sourcepts_%s.obj'%(prefix), source_points[0].detach().clone(), src_colors[0].detach().clone(), random_trans=[0,0,0])
