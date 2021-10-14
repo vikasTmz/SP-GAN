@@ -8,6 +8,19 @@ from shapeflow.layers.chamfer_layer import ChamferDistKDTree
 from shapeflow.layers.shared_definition import LOSSES, OPTIMIZERS
 import shapeflow.utils.train_utils as utils
 
+def export_obj_cpu(filename, pc, colors=None, random_trans=[0,0,0]):
+    # random_trans = random.uniform(1, 2)
+    with open('%s'%(filename), 'w') as f:
+        for i,p in enumerate(pc):
+            x,y,z = p
+            x += random_trans[0]
+            y += random_trans[1]
+            z += random_trans[2]
+            r,g,b = [i/1024,i/1024,i/1024]
+            if colors is not None:
+                r,g,b = abs(colors[i])
+            f.write('v {:.4f} {:.4f} {:.4f} \
+                    {:.4f} {:.4f} {:.4f} \n'.format(x, y, z, r, g, b))
 
 class LatentEmbedder(object):
     """Helper class for embedding new observation in deformation latent space.
@@ -118,7 +131,6 @@ class LatentEmbedder(object):
         )
         self.deformer.net.tar_latents = embedded_latents
         embedded_latents = self.deformer.net.tar_latents
-        # [bs_tar, lat_dims]
 
         # Init optimizer.
         if optimizer not in OPTIMIZERS.keys():
@@ -141,7 +153,7 @@ class LatentEmbedder(object):
         chamfer_dist = ChamferDistKDTree(reduction="mean", njobs=1)
         chamfer_dist.to(self.device)
 
-        def optimize_latent(point_loader, optim, niter):
+        def optimize_latent(point_loader, optim, niter, save=False):
             # Optimize for latents.
             self.deformer.train()
             toc = time.time()
@@ -158,6 +170,7 @@ class LatentEmbedder(object):
                 .expand(bs_src, bs_tar, npts_tar, 3)
                 .view(-1, npts_tar, 3)
             )
+            target_points_ = target_points_.type(torch.float32)
             it = 0
 
             for batch_idx, (fnames, idxs, source_points) in enumerate(
@@ -181,26 +194,68 @@ class LatentEmbedder(object):
                 source_latents_ = source_latents_.view(-1, self.lat_dims)
                 target_latents_ = embedded_latents_.view(-1, self.lat_dims)
                 zeros = torch.zeros_like(source_latents_)
-                source_target_latents = torch.stack(
-                    [source_latents_, zeros, target_latents_], dim=1
-                )
+                direction = "dd"#"source2target"
 
-                deformed_pts = self.deformer(
-                    source_points,
-                    source_target_latents,  # [bs_sr*bs_tar, npts_src, 3]
-                )  # [bs_sr*bs_tar, npts_src, 3]
-
-                # Symmetric pair of matching losses.
-                if self.symm:
-                    accu, comp, cham = chamfer_dist(
-                        utils.symmetric_duplication(deformed_pts, symm_dim=2),
-                        utils.symmetric_duplication(
-                            target_points_, symm_dim=2
-                        ),
+                if direction == "source2target":
+                    source_target_latents = torch.stack(
+                        [source_latents_, zeros, target_latents_], dim=1
                     )
+
+                    deformed_pts = self.deformer(
+                        source_points,
+                        source_target_latents,  # [bs_sr*bs_tar, npts_src, 3]
+                    )
+
+                    # Symmetric pair of matching losses.
+                    print("self.symm = ", self.symm)
+                    if self.symm:
+                        accu, comp, cham = chamfer_dist(
+                            utils.symmetric_duplication(deformed_pts, symm_dim=2),
+                            utils.symmetric_duplication(
+                                target_points_, symm_dim=2
+                            ),
+                        )
+                    else:
+                        accu, comp, cham = chamfer_dist(
+                            deformed_pts, target_points_
+                        )
+
+                    # Check amount of deformation.
+                    deform_abs = torch.mean(
+                        torch.norm(deformed_pts - source_points, dim=-1)
+                    )
+
                 else:
-                    accu, comp, cham = chamfer_dist(
-                        deformed_pts, target_points_
+                    target_source_latents = torch.stack(
+                        [target_latents_, zeros, source_latents_], dim=1
+                    )
+
+                    deformed_pts = self.deformer(
+                        target_points_,
+                        target_source_latents,  # [bs_sr*bs_tar, npts_src, 3]
+                    )
+                    if save and batch_idx%10==0:
+                        for pc_i in range(deformed_pts.size(0)):
+                            export_obj_cpu('%d_%d_deformedpts.obj'%(batch_idx,pc_i),deformed_pts[pc_i].detach().clone(), target_points_[pc_i].detach().clone())
+                            export_obj_cpu('%d_%d_targetpts.obj'%(batch_idx,pc_i),target_points_[pc_i].detach().clone(), target_points_[pc_i].detach().clone())
+                            export_obj_cpu('%d_%d_sourcepts.obj'%(batch_idx,pc_i),source_points[pc_i].detach().clone(), target_points_[pc_i].detach().clone())
+
+                    # Symmetric pair of matching losses.
+                    if self.symm:
+                        accu, comp, cham = chamfer_dist(
+                            utils.symmetric_duplication(deformed_pts, symm_dim=2),
+                            utils.symmetric_duplication(
+                                source_points, symm_dim=2
+                            ),
+                        )
+                    else:
+                        accu, comp, cham = chamfer_dist(
+                            deformed_pts, source_points
+                        )
+
+                    # Check amount of deformation.
+                    deform_abs = torch.mean(
+                        torch.norm(deformed_pts - target_points_, dim=-1)
                     )
 
                 if matching == "one_way":
@@ -209,10 +264,6 @@ class LatentEmbedder(object):
                 else:
                     loss = criterion(cham, torch.zeros_like(cham))
 
-                # Check amount of deformation.
-                deform_abs = torch.mean(
-                    torch.norm(deformed_pts - source_points, dim=-1)
-                )
 
                 loss.backward()
 
@@ -238,7 +289,7 @@ class LatentEmbedder(object):
                     break
 
         # Optimize to range.
-        optimize_latent(point_loader, optim, embedding_niter)
+        optimize_latent(point_loader, optim, embedding_niter, save=False)
         latents_pre_tune = embedded_latents.detach().cpu().numpy()
 
         # Finetune topk.
@@ -330,3 +381,53 @@ class LatentEmbedder(object):
         ]
 
         return deformed_meshes, orig_meshes, dist
+
+    def unobserved_deformation(self, lat_codes_src, lat_codes_tar, src_pts, tar_pts):
+
+        if not isinstance(lat_codes_src, torch.Tensor):
+            lat_codes_src = torch.tensor(lat_codes_src).float().to(self.device)
+
+        if not isinstance(lat_codes_tar, torch.Tensor):
+            lat_codes_tar = torch.tensor(lat_codes_tar).float().to(self.device)
+
+        _, npts_tar, _ = src_pts.shape
+
+        src_latent = (
+            lat_codes_src[:, None]
+            .expand(1, 1, self.lat_dims)
+            .reshape(-1, self.lat_dims)
+        ) 
+
+        tar_latent = (
+            lat_codes_tar[:, None]
+            .expand(1, 1, self.lat_dims)
+            .reshape(-1, self.lat_dims)
+        )  # [batch*k, lat_dims]
+
+        source_points = (
+                src_pts[None]
+                .expand(1, 1, npts_tar, 3)
+                .view(-1, npts_tar, 3)
+            )
+
+        target_points = (
+                tar_pts[None]
+                .expand(1, 1, npts_tar, 3)
+                .view(-1, npts_tar, 3)
+            )
+
+        source_points = source_points.type(torch.float32)
+        target_points = target_points.type(torch.float32)
+
+        zeros = torch.zeros_like(src_latent)
+        src_tar_latent = torch.stack([src_latent, zeros, tar_latent], dim=1)
+
+        with torch.no_grad():
+            deformed_verts = self.deformer(source_points, src_tar_latent)
+
+        deform_abs = torch.mean(torch.norm(deformed_verts - source_points, dim=-1))
+        print("deform_abs = ",deform_abs)
+
+        export_obj_cpu('deformedpts.obj', deformed_verts[0].detach().clone(), source_points[0].detach().clone(), random_trans=[3,0,0])
+        export_obj_cpu('targetpts.obj', target_points[0].detach().clone(), source_points[0].detach().clone(), random_trans=[1.5,0,0])
+        export_obj_cpu('sourcepts.obj', source_points[0].detach().clone(), source_points[0].detach().clone(), random_trans=[0,0,0])

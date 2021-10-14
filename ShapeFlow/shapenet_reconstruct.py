@@ -54,13 +54,20 @@ def get_args():
     )
 
     parser.add_argument(
-        "--input_path",
+        "--input_path_1",
         type=str,
-        default="3dfuture_2.ply",
+        default="3dfuture_1.ply",
         # default="/media/andy/Elements/Shapeflow_data/data/shapenet_simplified/val/03001627/c4f9249def12870a2b3e9b6eb52d35df/model.ply",
         # default="/media/andy/Elements/Shapeflow_data/data/shapenet_simplified/val/03001627/bcc73b8ff332b4df3d25ee35360a1f4d/model.ply",
         help="path to input points (.ply file).",
     )
+    parser.add_argument(
+        "--input_path_2",
+        type=str,
+        default="3dfuture_2.ply",
+        help="path to input points (.ply file).",
+    )
+
     parser.add_argument(
         "--output_dir", type=str, default="", help="path to output meshes."
     )
@@ -81,7 +88,7 @@ def get_args():
         "-nf",
         "--finetune_niter",
         type=int,
-        default=30,
+        default=0,
         help="number of finetuning iterations.",
     )
     parser.add_argument(
@@ -115,7 +122,7 @@ def main():
     )
 
     # assert category is correct
-    mesh_name = args_eval.input_path.split("/")[-1]
+    mesh_name = args_eval.input_path_1.split("/")[-1]
 
     # output directories
     # mesh_out_dir = os.path.join(args_eval.output_dir, "meshes", syn_id)
@@ -125,23 +132,18 @@ def main():
     )
     orig_dir = os.path.join(meta_out_dir, "original_retrieved")
     deformed_dir = os.path.join(meta_out_dir, "deformed")
-    # os.makedirs(mesh_out_dir, exist_ok=True)
-    # os.makedirs(meta_out_dir, exist_ok=True)
-    # os.makedirs(orig_dir, exist_ok=True)
-    # os.makedirs(deformed_dir, exist_ok=True)
-
-    # redirect logging
-    # sys.stdout = open(os.path.join(meta_out_dir, "log.txt"), "w")
 
     # initialize deformer
     # input points
     sample_points = 1024
-    mesh_gt = trimesh.load(args_eval.input_path)
-    mesh_v = np.array(mesh_gt.vertices)
-    points = mesh_gt.sample(sample_points)
-    # print(mesh_v.shape)
+    mesh_1 = trimesh.load(args_eval.input_path_1)
+    mesh_2 = trimesh.load(args_eval.input_path_2)
+
+    # mesh_v = np.array(mesh_1.vertices)
+    points_1 = mesh_1.sample(sample_points)
+    points_2 = mesh_2.sample(sample_points)
     # points = mesh_v[:1024]
-    export_obj_cpu('shapenet_recon_input.obj', points, random_trans=[-1.5,0,0])
+    # export_obj_cpu('shapenet_recon_input.obj', points, random_trans=[-1.5,0,0])
     # dataloader
     data_root = args.data_root
     mesh_dataset = ShapeNetMesh(
@@ -185,9 +187,10 @@ def main():
 
     # embed
     embedder = LatentEmbedder(point_dataset, mesh_dataset, deformer, topk=5)
-    input_pts = torch.tensor(points)[None].to(device)
-    lat_codes_pre, lat_codes_post = embedder.embed(
-        input_pts,
+
+    # Embed shape 1
+    lat_codes_pre_1, lat_codes_post_1 = embedder.embed(
+        torch.tensor(points_1)[None].to(device),
         matching="two_way",
         verbose=True,
         lr=1e-2,
@@ -197,10 +200,37 @@ def main():
         seed=1,
     )
 
+    # Embed shape 2
+    lat_codes_pre_2, lat_codes_post_2 = embedder.embed(
+        torch.tensor(points_2)[None].to(device),
+        matching="two_way",
+        verbose=True,
+        lr=1e-2,
+        embedding_niter=args_eval.embedding_niter,
+        finetune_niter=args_eval.finetune_niter,
+        bs=4,
+        seed=1,
+    )
+
+    print("Done embedding...")
+
+    # retrieve deformed models
+    embedder.unobserved_deformation(
+        lat_codes_pre_1,
+        lat_codes_pre_2,
+        torch.tensor(points_1)[None].to(device),
+        torch.tensor(points_2)[None].to(device)
+    )
+
+    print("Done deforming new shapes...")
+    exit()
+
     # retrieve deformed models
     deformed_meshes, orig_meshes, dist = embedder.retrieve(
         lat_codes_post, tar_pts=points, matching="two_way"
     )
+    print("Done retrieving...")
+
     asort = np.argsort(dist)
     dist = [dist[i] for i in asort]
     deformed_meshes = [deformed_meshes[i] for i in asort]

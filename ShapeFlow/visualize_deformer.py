@@ -94,7 +94,6 @@ def deformation_two_shapes():
     source_idx = 0
     target_idx = 1
 
-
     # get the corresponding latent codes
     source_latent = deformer.get_lat_params(source_idx)[None]   # unsqueeze batch dimension
     target_latent = deformer.get_lat_params(target_idx)[None]   # unsqueeze batch dimension
