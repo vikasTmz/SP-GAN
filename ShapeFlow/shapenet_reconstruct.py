@@ -290,20 +290,21 @@ def main():
         torch.tensor(points_2)[None].to(device),
         torch.tensor(mesh_1.colors[:sample_points])[None].to(device),
         torch.tensor(mesh_2.colors[:sample_points])[None].to(device),
-        "pre"
-    )
-
-    # retrieve deformed models
-    embedder.dense_correspondence(
-        lat_codes_post_1,
-        lat_codes_post_2,
-        torch.tensor(points_1)[None].to(device),
-        torch.tensor(points_2)[None].to(device),
-        torch.tensor(mesh_1.colors[:sample_points])[None].to(device),
-        torch.tensor(mesh_2.colors[:sample_points])[None].to(device),
-        "post",
+        "pre",
         mesh_2
     )
+
+    # # retrieve deformed models
+    # embedder.dense_correspondence(
+    #     lat_codes_post_1,
+    #     lat_codes_post_2,
+    #     torch.tensor(points_1)[None].to(device),
+    #     torch.tensor(points_2)[None].to(device),
+    #     torch.tensor(mesh_1.colors[:sample_points])[None].to(device),
+    #     torch.tensor(mesh_2.colors[:sample_points])[None].to(device),
+    #     "post",
+        
+    # )
 
     print("Done deforming new shapes...")
     exit()
