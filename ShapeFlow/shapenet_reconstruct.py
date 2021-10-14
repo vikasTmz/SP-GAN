@@ -194,7 +194,7 @@ def main():
 
     # initialize deformer
     # input points
-    sample_points = 1024
+    sample_points = 2048*2
     # mesh_1 = trimesh.load(args_eval.input_path_1)
     # mesh_2 = trimesh.load(args_eval.input_path_2)
 
