@@ -495,10 +495,10 @@ class LatentEmbedder(object):
                             canonical_target,p=2)
         closests = torch.argsort(closests[0,:,:], dim=1)
 
-        indicies = torch.range(0, closests.size(0)-1,dtype=closests.dtype)
-        print(indicies.size(), closests[:,0].size())
+        indicies = torch.range(0, closests.size(0)-1,dtype=closests.dtype,device=closests.device)
+        print(indicies.size(), closests[:,0].size(), src_colors.device, )
         tar_colors = torch.zeros(tar_colors.size())
-        tar_colors = tar_colors.type(src_colors.dtype)
+        tar_colors = tar_colors.type(src_colors.dtype).to(src_colors.device)
         tar_colors[:,closests[:,0],:] = src_colors[:,indicies,:]
 
         export_obj_cpu('canonical_source_%s.obj'%(prefix), canonical_source[0].detach().clone(), src_colors[0].detach().clone(), random_trans=[0,1.5,0])
