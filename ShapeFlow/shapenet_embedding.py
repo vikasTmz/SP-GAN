@@ -505,6 +505,7 @@ class LatentEmbedder(object):
         tar_colors[:,closests[:,0],:] = src_colors[:,indicies,:]
 
         points = mesh_target.vertices #target_points[0].detach().clone().to("cpu").numpy()
+        print(points.shape)
         pointcloud = o3d.geometry.PointCloud()
         pointcloud.points = o3d.utility.Vector3dVector(points)
         center = pointcloud.get_center()
