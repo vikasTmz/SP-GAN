@@ -117,7 +117,7 @@ def get_args():
         "-ne",
         "--embedding_niter",
         type=int,
-        default=1,
+        default=30,
         help="number of embedding iterations.",
     )
     parser.add_argument(
