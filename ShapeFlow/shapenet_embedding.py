@@ -532,7 +532,7 @@ class LatentEmbedder(object):
                 f.write('v {:.4f} {:.4f} {:.4f} \
                         {:.4f} {:.4f} {:.4f} \n'.format(x, y, z, r, g, b))
 
-        export_obj_cpu('canonical_source_%s.obj'%(prefix), canonical_source[0].detach().clone(), src_colors[0].detach().clone(), random_trans=[0,1.5,0])
-        export_obj_cpu('canonical_target_%s.obj'%(prefix), canonical_target[0].detach().clone(), tar_colors[0].detach().clone(), random_trans=[1.5,1.5,0])
-        export_obj_cpu('targetpts_%s.obj'%(prefix), target_points[0].detach().clone(), tar_colors[0].detach().clone(), random_trans=[1.5,0,0])
-        export_obj_cpu('sourcepts_%s.obj'%(prefix), source_points[0].detach().clone(), src_colors[0].detach().clone(), random_trans=[0,0,0])
+        # export_obj_cpu('canonical_source_%s.obj'%(prefix), canonical_source[0].detach().clone(), src_colors[0].detach().clone(), random_trans=[0,1.5,0])
+        # export_obj_cpu('canonical_target_%s.obj'%(prefix), canonical_target[0].detach().clone(), tar_colors[0].detach().clone(), random_trans=[1.5,1.5,0])
+        # export_obj_cpu('targetpts_%s.obj'%(prefix), target_points[0].detach().clone(), tar_colors[0].detach().clone(), random_trans=[1.5,0,0])
+        # export_obj_cpu('sourcepts_%s.obj'%(prefix), source_points[0].detach().clone(), src_colors[0].detach().clone(), random_trans=[0,0,0])
