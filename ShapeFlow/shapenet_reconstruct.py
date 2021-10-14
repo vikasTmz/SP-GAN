@@ -147,7 +147,7 @@ def get_args():
         "-nf",
         "--finetune_niter",
         type=int,
-        default=30,
+        default=0,
         help="number of finetuning iterations.",
     )
     parser.add_argument(
@@ -194,7 +194,7 @@ def main():
 
     # initialize deformer
     # input points
-    sample_points = 512
+    sample_points = 1024
     # mesh_1 = trimesh.load(args_eval.input_path_1)
     # mesh_2 = trimesh.load(args_eval.input_path_2)
 
