@@ -498,6 +498,7 @@ class LatentEmbedder(object):
         indicies = torch.range(0, closests.size(0)-1,dtype=closests.dtype)
         print(indicies.size(), closests[:,0].size())
         tar_colors = torch.zeros(tar_colors.size())
+        tar_colors = tar_colors.type(src_colors.dtype)
         tar_colors[:,closests[:,0],:] = src_colors[:,indicies,:]
 
         export_obj_cpu('canonical_source_%s.obj'%(prefix), canonical_source[0].detach().clone(), src_colors[0].detach().clone(), random_trans=[0,1.5,0])
