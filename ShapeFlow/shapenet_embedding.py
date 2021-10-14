@@ -431,3 +431,51 @@ class LatentEmbedder(object):
         export_obj_cpu('deformedpts.obj', deformed_verts[0].detach().clone(), source_points[0].detach().clone(), random_trans=[3,0,0])
         export_obj_cpu('targetpts.obj', target_points[0].detach().clone(), source_points[0].detach().clone(), random_trans=[1.5,0,0])
         export_obj_cpu('sourcepts.obj', source_points[0].detach().clone(), source_points[0].detach().clone(), random_trans=[0,0,0])
+
+    def dense_correspondence(self, lat_codes_src, lat_codes_tar, src_pts, tar_pts):
+
+        if not isinstance(lat_codes_src, torch.Tensor):
+            lat_codes_src = torch.tensor(lat_codes_src).float().to(self.device)
+
+        if not isinstance(lat_codes_tar, torch.Tensor):
+            lat_codes_tar = torch.tensor(lat_codes_tar).float().to(self.device)
+
+        _, npts_tar, _ = src_pts.shape
+
+        src_latent = (
+            lat_codes_src[:, None]
+            .expand(1, 1, self.lat_dims)
+            .reshape(-1, self.lat_dims)
+        ) 
+
+        tar_latent = (
+            lat_codes_tar[:, None]
+            .expand(1, 1, self.lat_dims)
+            .reshape(-1, self.lat_dims)
+        )  # [batch*k, lat_dims]
+
+        source_points = (
+                src_pts[None]
+                .expand(1, 1, npts_tar, 3)
+                .view(-1, npts_tar, 3)
+            )
+
+        target_points = (
+                tar_pts[None]
+                .expand(1, 1, npts_tar, 3)
+                .view(-1, npts_tar, 3)
+            )
+
+        source_points = source_points.type(torch.float32)
+        target_points = target_points.type(torch.float32)
+
+        zeros = torch.zeros_like(src_latent)
+
+        with torch.no_grad():
+            canonical_source = self.deformer(source_points, torch.stack([src_latent, zeros], dim=1))
+            canonical_target = self.deformer(target_points, torch.stack([tar_latent, zeros], dim=1))
+
+        export_obj_cpu('canonical_source.obj', canonical_source[0].detach().clone(), source_points[0].detach().clone(), random_trans=[0,1.5,0])
+        export_obj_cpu('canonical_target.obj', canonical_target[0].detach().clone(), source_points[0].detach().clone(), random_trans=[1.5,1.5,0])
+        export_obj_cpu('targetpts.obj', target_points[0].detach().clone(), source_points[0].detach().clone(), random_trans=[1.5,0,0])
+        export_obj_cpu('sourcepts.obj', source_points[0].detach().clone(), source_points[0].detach().clone(), random_trans=[0,0,0])

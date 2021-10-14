@@ -14,6 +14,42 @@ from shapenet_dataloader import ShapeNetMesh, FixedPointsCachedDataset
 from shapeflow.layers.deformation_layer import NeuralFlowDeformer
 from shapenet_embedding import LatentEmbedder
 
+class ObjLoader(object):
+    def __init__(self, fileName):
+        self.vertices = []
+        self.faces = []
+        ##
+        try:
+            f = open(fileName)
+            for line in f:
+                if line[:2] == "v ":
+                    index1 = line.find(" ") + 1
+                    index2 = line.find(" ", index1 + 1)
+                    index3 = line.find(" ", index2 + 1)
+
+                    vertex = (float(line[index1:index2]), float(line[index2:index3]), float(line[index3:-1]))
+                    vertex = (round(vertex[0], 2), round(vertex[1], 2), round(vertex[2], 2))
+                    self.vertices.append(vertex)
+
+                elif line[0] == "f":
+                    string = line.replace("//", "/")
+                    ##
+                    i = string.find(" ") + 1
+                    face = []
+                    for item in range(string.count(" ")):
+                        if string.find(" ", i) == -1:
+                            face.append(string[i:-1])
+                            break
+                        face.append(string[i:string.find(" ", i)])
+                        i = string.find(" ", i) + 1
+                    ##
+                    self.faces.append(tuple(face))
+
+            f.close()
+            self.vertices = np.array(self.vertices)
+        except IOError:
+            print(".obj file not found.")
+
 def export_obj_cpu(filename, pc, colors=None, random_trans=[0,0,0]):
     # random_trans = random.uniform(1, 2)
     with open('%s'%(filename), 'w') as f:
@@ -56,7 +92,7 @@ def get_args():
     parser.add_argument(
         "--input_path_1",
         type=str,
-        default="3dfuture_1.ply",
+        default="3dfuture_4_pc.obj",
         # default="/media/andy/Elements/Shapeflow_data/data/shapenet_simplified/val/03001627/c4f9249def12870a2b3e9b6eb52d35df/model.ply",
         # default="/media/andy/Elements/Shapeflow_data/data/shapenet_simplified/val/03001627/bcc73b8ff332b4df3d25ee35360a1f4d/model.ply",
         help="path to input points (.ply file).",
@@ -64,7 +100,7 @@ def get_args():
     parser.add_argument(
         "--input_path_2",
         type=str,
-        default="3dfuture_2.ply",
+        default="3dfuture_3_pc.obj",
         help="path to input points (.ply file).",
     )
 
@@ -81,7 +117,7 @@ def get_args():
         "-ne",
         "--embedding_niter",
         type=int,
-        default=30,
+        default=5,
         help="number of embedding iterations.",
     )
     parser.add_argument(
@@ -136,12 +172,21 @@ def main():
     # initialize deformer
     # input points
     sample_points = 1024
-    mesh_1 = trimesh.load(args_eval.input_path_1)
-    mesh_2 = trimesh.load(args_eval.input_path_2)
+    # mesh_1 = trimesh.load(args_eval.input_path_1)
+    # mesh_2 = trimesh.load(args_eval.input_path_2)
+
+    mesh_1 = ObjLoader(args_eval.input_path_1)
+    mesh_2 = ObjLoader(args_eval.input_path_2)
 
     # mesh_v = np.array(mesh_1.vertices)
-    points_1 = mesh_1.sample(sample_points)
-    points_2 = mesh_2.sample(sample_points)
+    # points_1 = mesh_1.sample(sample_points)
+    # points_2 = mesh_2.sample(sample_points)
+    indices = np.random.randint(mesh_1.vertices.shape[0], size=sample_points)
+    points_1 = mesh_1.vertices[indices]
+    
+    indices = np.random.randint(mesh_2.vertices.shape[0], size=sample_points)
+    points_2 = mesh_2.vertices[indices]
+
     # points = mesh_v[:1024]
     # export_obj_cpu('shapenet_recon_input.obj', points, random_trans=[-1.5,0,0])
     # dataloader
@@ -215,7 +260,7 @@ def main():
     print("Done embedding...")
 
     # retrieve deformed models
-    embedder.unobserved_deformation(
+    embedder.dense_correspondence(
         lat_codes_pre_1,
         lat_codes_pre_2,
         torch.tensor(points_1)[None].to(device),
