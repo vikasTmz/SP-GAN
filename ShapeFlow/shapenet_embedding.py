@@ -513,7 +513,7 @@ class LatentEmbedder(object):
         R = pointcloud_t.get_rotation_matrix_from_xyz((0, np.pi/2, 0))
         pointcloud_tr.rotate(R, center=pointcloud_tr.get_center())
 
-        pc = np.asarray(pointcloud_t.points)
+        pc = np.asarray(pointcloud_tr.points)
         with open('%s'%('targetpts_%s.obj'%(prefix)), 'w') as f:
             for i,p in enumerate(pc):
                 x,y,z = p
