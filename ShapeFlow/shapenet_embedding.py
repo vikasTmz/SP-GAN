@@ -508,14 +508,14 @@ class LatentEmbedder(object):
         pointcloud = o3d.geometry.PointCloud()
         pointcloud.points = o3d.utility.Vector3dVector(points)
         center = pointcloud.get_center()
-        pointcloud_t = copy.deepcopy(pointcloud).translate((-0.1,-0.2,-0.2))
+        pointcloud_t = copy.deepcopy(pointcloud).translate((0,-0.2,0))
         pointcloud_t.scale(1.724, center=pointcloud_t.get_center())
         pointcloud_tr = copy.deepcopy(pointcloud_t)
         R = pointcloud_t.get_rotation_matrix_from_xyz((0, np.pi/2, 0))
         pointcloud_tr.rotate(R, center=pointcloud_tr.get_center())
 
         pc = np.asarray(pointcloud_tr.points)[:tar_colors.size(1)]
-        with open('%s'%('targetpts_%s.obj'%(prefix)), 'w') as f:
+        with open('%s'%('cond-pc_deformed.obj'), 'w') as f:
             for i,p in enumerate(pc):
                 x,y,z = p
                 r,g,b = tar_colors[0,i]
@@ -523,7 +523,15 @@ class LatentEmbedder(object):
                     f.write('v {:.4f} {:.4f} {:.4f} \
                             {:.4f} {:.4f} {:.4f} \n'.format(x, y, z, r, g, b))
 
-        export_obj_cpu('canonical_source_%s.obj'%(prefix), canonical_source[0].detach().clone(), src_colors[0].detach().clone(), random_trans=[0,1.5,0])
-        export_obj_cpu('canonical_target_%s.obj'%(prefix), canonical_target[0].detach().clone(), tar_colors[0].detach().clone(), random_trans=[1.5,1.5,0])
+        pc = np.asarray(pointcloud_tr.points)
+        with open('%s'%('geom-pc.obj'), 'w') as f:
+            for i,p in enumerate(pc):
+                x,y,z = p
+                r,g,b = mesh_target.colors[i]
+                f.write('v {:.4f} {:.4f} {:.4f} \
+                        {:.4f} {:.4f} {:.4f} \n'.format(x, y, z, r, g, b))
+
+        # export_obj_cpu('canonical_source_%s.obj'%(prefix), canonical_source[0].detach().clone(), src_colors[0].detach().clone(), random_trans=[0,1.5,0])
+        # export_obj_cpu('canonical_target_%s.obj'%(prefix), canonical_target[0].detach().clone(), tar_colors[0].detach().clone(), random_trans=[1.5,1.5,0])
         # export_obj_cpu('targetpts_%s.obj'%(prefix), target_points[0].detach().clone(), tar_colors[0].detach().clone(), random_trans=[1.5,0,0])
-        export_obj_cpu('sourcepts_%s.obj'%(prefix), source_points[0].detach().clone(), src_colors[0].detach().clone(), random_trans=[0,0,0])
+        # export_obj_cpu('sourcepts_%s.obj'%(prefix), source_points[0].detach().clone(), src_colors[0].detach().clone(), random_trans=[0,0,0])
