@@ -296,7 +296,8 @@ def main():
             torch.tensor(mesh_1.colors[i:i+sample_points])[None].to(device),
             torch.tensor(mesh_2.colors[i:i+sample_points])[None].to(device),
             str(i),
-            mesh_2
+            mesh_2,
+            i,i+sample_points
         )
 
     # # retrieve deformed models
