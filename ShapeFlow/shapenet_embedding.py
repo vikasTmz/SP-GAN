@@ -507,7 +507,7 @@ class LatentEmbedder(object):
         pointcloud = o3d.geometry.PointCloud()
         pointcloud.points = o3d.utility.Vector3dVector(points)
         center = pointcloud.get_center()
-        pointcloud_t = copy.deepcopy(pointcloud).translate((0,-0.2,0))
+        pointcloud_t = copy.deepcopy(pointcloud).translate((0,-0.2,0.1))
         pointcloud_t.scale(1.724, center=pointcloud_t.get_center())
         pointcloud_tr = copy.deepcopy(pointcloud_t)
         R = pointcloud_t.get_rotation_matrix_from_xyz((0, np.pi/2, 0))
