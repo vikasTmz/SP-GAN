@@ -505,11 +505,10 @@ class LatentEmbedder(object):
         tar_colors[:,closests[:,0],:] = src_colors[:,indicies,:]
 
         points = mesh_target.vertices #target_points[0].detach().clone().to("cpu").numpy()
-        print(points.shape)
         pointcloud = o3d.geometry.PointCloud()
         pointcloud.points = o3d.utility.Vector3dVector(points)
         center = pointcloud.get_center()
-        pointcloud_t = copy.deepcopy(pointcloud).translate(-1*(0.1,0.2,0.2))
+        pointcloud_t = copy.deepcopy(pointcloud).translate((-0.1,-0.2,-0.2))
         pointcloud_t.scale(1.724, center=pointcloud_t.get_center())
         pointcloud_tr = copy.deepcopy(pointcloud_t)
         R = pointcloud_t.get_rotation_matrix_from_xyz((0, np.pi/2, 0))
