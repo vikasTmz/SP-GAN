@@ -441,7 +441,8 @@ class LatentEmbedder(object):
             tar_pts,
             src_colors,
             tar_colors,
-            prefix):
+            prefix,
+            mesh_target):
 
         if not isinstance(lat_codes_src, torch.Tensor):
             lat_codes_src = torch.tensor(lat_codes_src).float().to(self.device)
@@ -503,17 +504,17 @@ class LatentEmbedder(object):
         tar_colors = tar_colors.type(src_colors.dtype).to(src_colors.device)
         tar_colors[:,closests[:,0],:] = src_colors[:,indicies,:]
 
-        points = target_points[0].detach().clone().to("cpu").numpy()
+        points = mesh_target.vertices #target_points[0].detach().clone().to("cpu").numpy()
         pointcloud = o3d.geometry.PointCloud()
         pointcloud.points = o3d.utility.Vector3dVector(points)
         center = pointcloud.get_center()
-        pointcloud_t = copy.deepcopy(pointcloud).translate((0,-0.2,0.1))
+        pointcloud_t = copy.deepcopy(pointcloud).translate(-1*(0.1,0.2,0.2))
         pointcloud_t.scale(1.724, center=pointcloud_t.get_center())
         pointcloud_tr = copy.deepcopy(pointcloud_t)
         R = pointcloud_t.get_rotation_matrix_from_xyz((0, np.pi/2, 0))
         pointcloud_tr.rotate(R, center=pointcloud_tr.get_center())
 
-        pc = np.asarray(pointcloud_tr.points)
+        pc = np.asarray(pointcloud_tr.points)[:tar_colors.size(1)]
         with open('%s'%('targetpts_%s.obj'%(prefix)), 'w') as f:
             for i,p in enumerate(pc):
                 x,y,z = p

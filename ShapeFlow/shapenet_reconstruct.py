@@ -140,7 +140,7 @@ def get_args():
         "-ne",
         "--embedding_niter",
         type=int,
-        default=30,
+        default=0,
         help="number of embedding iterations.",
     )
     parser.add_argument(
@@ -301,7 +301,8 @@ def main():
         torch.tensor(points_2)[None].to(device),
         torch.tensor(mesh_1.colors[:sample_points])[None].to(device),
         torch.tensor(mesh_2.colors[:sample_points])[None].to(device),
-        "post"
+        "post",
+        mesh_2
     )
 
     print("Done deforming new shapes...")
