@@ -256,7 +256,7 @@ def main():
     # embed
     embedder = LatentEmbedder(point_dataset, mesh_dataset, deformer, topk=5)
 
-    for i in range(0, mesh_1.vertices.shape[0],sample_points):
+    for i in range(0, 2048,sample_points): #mesh_1.vertices.shape[0]
         print(i)
         points_1 = mesh_1.vertices[i:i+sample_points]    
         points_2 = mesh_2.vertices[i:i+sample_points]
