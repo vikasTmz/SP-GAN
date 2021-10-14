@@ -515,7 +515,7 @@ class LatentEmbedder(object):
         pointcloud_tr.rotate(R, center=pointcloud_tr.get_center())
 
         pc = np.asarray(pointcloud_tr.points)[:tar_colors.size(1)]
-        with open('%s'%('cond-pc_deformed.obj'), 'w') as f:
+        with open('cond-pc_deformed_%s.obj'%(prefix), 'w') as f:
             for i,p in enumerate(pc):
                 x,y,z = p
                 r,g,b = tar_colors[0,i]

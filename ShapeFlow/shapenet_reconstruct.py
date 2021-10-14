@@ -194,7 +194,7 @@ def main():
 
     # initialize deformer
     # input points
-    sample_points = 2048*7
+    sample_points = 1024
     # mesh_1 = trimesh.load(args_eval.input_path_1)
     # mesh_2 = trimesh.load(args_eval.input_path_2)
 
@@ -256,43 +256,48 @@ def main():
     # embed
     embedder = LatentEmbedder(point_dataset, mesh_dataset, deformer, topk=5)
 
-    # Embed shape 1
-    lat_codes_pre_1, lat_codes_post_1 = embedder.embed(
-        torch.tensor(points_1)[None].to(device),
-        matching="two_way",
-        verbose=True,
-        lr=1e-2,
-        embedding_niter=args_eval.embedding_niter,
-        finetune_niter=args_eval.finetune_niter,
-        bs=4,
-        seed=1,
-    )
+    for i in range(0, mesh_1.vertices.shape[0],sample_points):
+        print(i)
+        points_1 = mesh_1.vertices[i:i+sample_points]    
+        points_2 = mesh_2.vertices[i:i+sample_points]
 
-    # Embed shape 2
-    lat_codes_pre_2, lat_codes_post_2 = embedder.embed(
-        torch.tensor(points_2)[None].to(device),
-        matching="two_way",
-        verbose=True,
-        lr=1e-2,
-        embedding_niter=args_eval.embedding_niter,
-        finetune_niter=args_eval.finetune_niter,
-        bs=4,
-        seed=1,
-    )
+        # Embed shape 1
+        lat_codes_pre_1, lat_codes_post_1 = embedder.embed(
+            torch.tensor(points_1)[None].to(device),
+            matching="two_way",
+            verbose=True,
+            lr=1e-2,
+            embedding_niter=args_eval.embedding_niter,
+            finetune_niter=args_eval.finetune_niter,
+            bs=4,
+            seed=1,
+        )
 
-    print("Done embedding...")
+        # Embed shape 2
+        lat_codes_pre_2, lat_codes_post_2 = embedder.embed(
+            torch.tensor(points_2)[None].to(device),
+            matching="two_way",
+            verbose=True,
+            lr=1e-2,
+            embedding_niter=args_eval.embedding_niter,
+            finetune_niter=args_eval.finetune_niter,
+            bs=4,
+            seed=1,
+        )
 
-    # retrieve deformed models
-    embedder.dense_correspondence(
-        lat_codes_pre_1,
-        lat_codes_pre_2,
-        torch.tensor(points_1)[None].to(device),
-        torch.tensor(points_2)[None].to(device),
-        torch.tensor(mesh_1.colors[:sample_points])[None].to(device),
-        torch.tensor(mesh_2.colors[:sample_points])[None].to(device),
-        "pre",
-        mesh_2
-    )
+        print("Done embedding...")
+
+        # retrieve deformed models
+        embedder.dense_correspondence(
+            lat_codes_pre_1,
+            lat_codes_pre_2,
+            torch.tensor(points_1)[None].to(device),
+            torch.tensor(points_2)[None].to(device),
+            torch.tensor(mesh_1.colors[:sample_points])[None].to(device),
+            torch.tensor(mesh_2.colors[:sample_points])[None].to(device),
+            str(i),
+            mesh_2
+        )
 
     # # retrieve deformed models
     # embedder.dense_correspondence(
