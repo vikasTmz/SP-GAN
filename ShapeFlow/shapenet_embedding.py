@@ -432,7 +432,12 @@ class LatentEmbedder(object):
         export_obj_cpu('targetpts.obj', target_points[0].detach().clone(), source_points[0].detach().clone(), random_trans=[1.5,0,0])
         export_obj_cpu('sourcepts.obj', source_points[0].detach().clone(), source_points[0].detach().clone(), random_trans=[0,0,0])
 
-    def dense_correspondence(self, lat_codes_src, lat_codes_tar, src_pts, tar_pts):
+    def dense_correspondence(self, lat_codes_src,
+            lat_codes_tar,
+            src_pts,
+            tar_pts,
+            src_colors,
+            tar_colors):
 
         if not isinstance(lat_codes_src, torch.Tensor):
             lat_codes_src = torch.tensor(lat_codes_src).float().to(self.device)
@@ -466,6 +471,12 @@ class LatentEmbedder(object):
                 .view(-1, npts_tar, 3)
             )
 
+        src_colors = (
+                src_colors[None]
+                .expand(1, 1, npts_tar, 3)
+                .view(-1, npts_tar, 3)
+            )
+
         source_points = source_points.type(torch.float32)
         target_points = target_points.type(torch.float32)
 
@@ -479,7 +490,7 @@ class LatentEmbedder(object):
                             canonical_source,p=2)
         closests = torch.argsort(closests[0,:,:], dim=1)
 
-        export_obj_cpu('canonical_source.obj', canonical_source[0].detach().clone(), source_points[0].detach().clone(), random_trans=[0,1.5,0])
-        export_obj_cpu('canonical_target.obj', canonical_target[0].detach().clone(), source_points[0,closests[:,0],:].detach().clone(), random_trans=[1.5,1.5,0])
-        export_obj_cpu('targetpts.obj', target_points[0].detach().clone(), source_points[0,closests[:,0],:].detach().clone(), random_trans=[1.5,0,0])
-        export_obj_cpu('sourcepts.obj', source_points[0].detach().clone(), source_points[0].detach().clone(), random_trans=[0,0,0])
+        export_obj_cpu('canonical_source.obj', canonical_source[0].detach().clone(), src_colors[0].detach().clone(), random_trans=[0,1.5,0])
+        export_obj_cpu('canonical_target.obj', canonical_target[0].detach().clone(), src_colors[0,closests[:,0],:].detach().clone(), random_trans=[1.5,1.5,0])
+        export_obj_cpu('targetpts.obj', target_points[0].detach().clone(), src_colors[0,closests[:,0],:].detach().clone(), random_trans=[1.5,0,0])
+        export_obj_cpu('sourcepts.obj', source_points[0].detach().clone(), src_colors[0].detach().clone(), random_trans=[0,0,0])

@@ -50,6 +50,29 @@ class ObjLoader(object):
         except IOError:
             print(".obj file not found.")
 
+class PlyLoader(object):
+    def __init__(self, fileName):
+        self.vertices = []
+        self.colors = []
+        ##
+        try:
+            f = open(fileName)
+            i = 0
+            for line in f:
+                if i > 12:
+                    splits = line.split(" ")
+                    splits = list(filter(None, splits))
+                    vertex = (float(splits[0]), float(splits[1]), float(splits[2]))
+                    self.vertices.append(vertex)
+                    color = (float(splits[3]), float(splits[4]), float(splits[5]))
+                    self.colors.append(color)
+                i+=1
+            f.close()
+            self.vertices = np.array(self.vertices)
+            self.colors = np.array(self.colors)
+        except IOError:
+            print(".obj file not found.")
+
 def export_obj_cpu(filename, pc, colors=None, random_trans=[0,0,0]):
     # random_trans = random.uniform(1, 2)
     with open('%s'%(filename), 'w') as f:
@@ -92,7 +115,7 @@ def get_args():
     parser.add_argument(
         "--input_path_1",
         type=str,
-        default="3dfuture_4_pc.obj",
+        default="3dfuture_5_pc.ply",
         # default="/media/andy/Elements/Shapeflow_data/data/shapenet_simplified/val/03001627/c4f9249def12870a2b3e9b6eb52d35df/model.ply",
         # default="/media/andy/Elements/Shapeflow_data/data/shapenet_simplified/val/03001627/bcc73b8ff332b4df3d25ee35360a1f4d/model.ply",
         help="path to input points (.ply file).",
@@ -100,7 +123,7 @@ def get_args():
     parser.add_argument(
         "--input_path_2",
         type=str,
-        default="3dfuture_3_pc.obj",
+        default="3dfuture_6_pc.ply",
         help="path to input points (.ply file).",
     )
 
@@ -117,7 +140,7 @@ def get_args():
         "-ne",
         "--embedding_niter",
         type=int,
-        default=30,
+        default=2,
         help="number of embedding iterations.",
     )
     parser.add_argument(
@@ -175,17 +198,17 @@ def main():
     # mesh_1 = trimesh.load(args_eval.input_path_1)
     # mesh_2 = trimesh.load(args_eval.input_path_2)
 
-    mesh_1 = ObjLoader(args_eval.input_path_1)
-    mesh_2 = ObjLoader(args_eval.input_path_2)
+    mesh_1 = PlyLoader(args_eval.input_path_1)
+    mesh_2 = PlyLoader(args_eval.input_path_2)
 
     # mesh_v = np.array(mesh_1.vertices)
     # points_1 = mesh_1.sample(sample_points)
     # points_2 = mesh_2.sample(sample_points)
-    indices = np.random.randint(mesh_1.vertices.shape[0], size=sample_points)
-    points_1 = mesh_1.vertices[indices]
+    # indices = np.random.randint(mesh_1.vertices.shape[0], size=sample_points)
+    points_1 = mesh_1.vertices[:sample_points]
     
-    indices = np.random.randint(mesh_2.vertices.shape[0], size=sample_points)
-    points_2 = mesh_2.vertices[indices]
+    # indices = np.random.randint(mesh_2.vertices.shape[0], size=sample_points)
+    points_2 = mesh_2.vertices[:sample_points]
 
     # points = mesh_v[:1024]
     # export_obj_cpu('shapenet_recon_input.obj', points, random_trans=[-1.5,0,0])
@@ -264,7 +287,9 @@ def main():
         lat_codes_pre_1,
         lat_codes_pre_2,
         torch.tensor(points_1)[None].to(device),
-        torch.tensor(points_2)[None].to(device)
+        torch.tensor(points_2)[None].to(device),
+        torch.tensor(mesh_1.colors[:sample_points])[None].to(device),
+        torch.tensor(mesh_2.colors[:sample_points])[None].to(device)
     )
 
     print("Done deforming new shapes...")
