@@ -481,5 +481,5 @@ class LatentEmbedder(object):
 
         export_obj_cpu('canonical_source.obj', canonical_source[0].detach().clone(), source_points[0].detach().clone(), random_trans=[0,1.5,0])
         export_obj_cpu('canonical_target.obj', canonical_target[0].detach().clone(), source_points[0,closests[:,0],:].detach().clone(), random_trans=[1.5,1.5,0])
-        export_obj_cpu('targetpts.obj', target_points[0].detach().clone(), source_points[0].detach().clone(), random_trans=[1.5,0,0])
+        export_obj_cpu('targetpts.obj', target_points[0].detach().clone(), source_points[0,closests[:,0],:].detach().clone(), random_trans=[1.5,0,0])
         export_obj_cpu('sourcepts.obj', source_points[0].detach().clone(), source_points[0].detach().clone(), random_trans=[0,0,0])
