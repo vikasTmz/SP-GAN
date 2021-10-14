@@ -487,11 +487,20 @@ class LatentEmbedder(object):
             canonical_source = self.deformer(source_points, torch.stack([src_latent, zeros], dim=1))
             canonical_target = self.deformer(target_points, torch.stack([tar_latent, zeros], dim=1))
 
-        closests = torch.cdist(canonical_target,
-                            canonical_source,p=2)
+        # closests = torch.cdist(canonical_target,
+        #                     canonical_source,p=2)
+        # closests = torch.argsort(closests[0,:,:], dim=1)
+
+        closests = torch.cdist(canonical_source,
+                            canonical_target,p=2)
         closests = torch.argsort(closests[0,:,:], dim=1)
 
+        indicies = torch.range(0, closests.size(0),dtype=closests.dtype)
+        print(indicies.size(), closests[:,0].size())
+        tar_colors = torch.zeros(tar_colors.size())
+        tar_colors[:,closests[:,0],:] = src_colors[:,indicies,:]
+
         export_obj_cpu('canonical_source_%s.obj'%(prefix), canonical_source[0].detach().clone(), src_colors[0].detach().clone(), random_trans=[0,1.5,0])
-        export_obj_cpu('canonical_target_%s.obj'%(prefix), canonical_target[0].detach().clone(), src_colors[0,closests[:,0],:].detach().clone(), random_trans=[1.5,1.5,0])
-        export_obj_cpu('targetpts_%s.obj'%(prefix), target_points[0].detach().clone(), src_colors[0,closests[:,0],:].detach().clone(), random_trans=[1.5,0,0])
+        export_obj_cpu('canonical_target_%s.obj'%(prefix), canonical_target[0].detach().clone(), tar_colors[0].detach().clone(), random_trans=[1.5,1.5,0])
+        export_obj_cpu('targetpts_%s.obj'%(prefix), target_points[0].detach().clone(), tar_colors[0].detach().clone(), random_trans=[1.5,0,0])
         export_obj_cpu('sourcepts_%s.obj'%(prefix), source_points[0].detach().clone(), src_colors[0].detach().clone(), random_trans=[0,0,0])
