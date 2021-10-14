@@ -495,7 +495,7 @@ class LatentEmbedder(object):
                             canonical_target,p=2)
         closests = torch.argsort(closests[0,:,:], dim=1)
 
-        indicies = torch.range(0, closests.size(0),dtype=closests.dtype)
+        indicies = torch.range(0, closests.size(0)-1,dtype=closests.dtype)
         print(indicies.size(), closests[:,0].size())
         tar_colors = torch.zeros(tar_colors.size())
         tar_colors[:,closests[:,0],:] = src_colors[:,indicies,:]
