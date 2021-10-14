@@ -140,14 +140,14 @@ def get_args():
         "-ne",
         "--embedding_niter",
         type=int,
-        default=30,
+        default=25,
         help="number of embedding iterations.",
     )
     parser.add_argument(
         "-nf",
         "--finetune_niter",
         type=int,
-        default=0,
+        default=25,
         help="number of finetuning iterations.",
     )
     parser.add_argument(
@@ -284,8 +284,8 @@ def main():
 
     # retrieve deformed models
     embedder.dense_correspondence(
-        lat_codes_pre_1,
-        lat_codes_pre_2,
+        lat_codes_post_1,
+        lat_codes_post_2,
         torch.tensor(points_1)[None].to(device),
         torch.tensor(points_2)[None].to(device),
         torch.tensor(mesh_1.colors[:sample_points])[None].to(device),
