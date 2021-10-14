@@ -8,6 +8,8 @@ from shapeflow.layers.chamfer_layer import ChamferDistKDTree
 from shapeflow.layers.shared_definition import LOSSES, OPTIMIZERS
 import shapeflow.utils.train_utils as utils
 
+import open3d as o3d
+
 def export_obj_cpu(filename, pc, colors=None, random_trans=[0,0,0]):
     # random_trans = random.uniform(1, 2)
     with open('%s'%(filename), 'w') as f:
