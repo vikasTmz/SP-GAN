@@ -11,6 +11,22 @@ import shapeflow.utils.train_utils as utils
 import copy
 import open3d as o3d
 
+TEMPLATE = \
+"""ply
+format ascii 1.0
+comment VCGLIB generated
+element vertex %d
+property float x
+property float y
+property float z
+property uchar red
+property uchar green
+property uchar blue
+element face 0
+property list uchar int vertex_indices
+end_header
+"""
+
 def export_obj_cpu(filename, pc, colors=None, random_trans=[0,0,0]):
     # random_trans = random.uniform(1, 2)
     with open('%s'%(filename), 'w') as f:
@@ -516,21 +532,38 @@ class LatentEmbedder(object):
         pointcloud_tr.rotate(R, center=pointcloud_tr.get_center())
 
         pc = np.asarray(pointcloud_tr.points)[start:end]
-        with open('cond-pc_deformed_%s.obj'%(prefix), 'w') as f:
+        # with open('cond-pc_deformed_%s.obj'%(prefix), 'w') as f:
+        #     for i,p in enumerate(pc):
+        #         x,y,z = p
+        #         r,g,b = tar_colors[0,i]
+        #         if r != 0 and g != 0 and b != 0:
+        #             f.write('v {:.4f} {:.4f} {:.4f} \
+        #                     {:.4f} {:.4f} {:.4f} \n'.format(x, y, z, r, g, b))
+
+        with open('cond-pc_deformed_%s.ply'%(prefix), 'w') as f:
+            f.write(TEMPLATE%(pc.shape[0]))
             for i,p in enumerate(pc):
                 x,y,z = p
-                r,g,b = tar_colors[0,i]
-                if r != 0 and g != 0 and b != 0:
-                    f.write('v {:.4f} {:.4f} {:.4f} \
-                            {:.4f} {:.4f} {:.4f} \n'.format(x, y, z, r, g, b))
+                r,g,b = tar_colors[0,i] * 255
+                if int(r) != 0 and int(g) != 0 and int(b) != 0:
+                    f.write('{:.4f} {:.4f} {:.4f} \
+                            {:d} {:d} {:d} \n'.format(x, y, z, int(r), int(g), int(b)))
 
         pc = np.asarray(pointcloud_tr.points)
-        with open('%s'%('geom-pc.obj'), 'w') as f:
+        # with open('%s'%('geom-pc.obj'), 'w') as f:
+        #     for i,p in enumerate(pc):
+        #         x,y,z = p
+        #         r,g,b = mesh_target.colors[i]
+        #         f.write('v {:.4f} {:.4f} {:.4f} \
+        #                 {:.4f} {:.4f} {:.4f} \n'.format(x, y, z, r, g, b))
+
+        with open('geom-pc.ply', 'w') as f:
+            f.write(TEMPLATE%(pc.shape[0]))
             for i,p in enumerate(pc):
                 x,y,z = p
-                r,g,b = mesh_target.colors[i]
-                f.write('v {:.4f} {:.4f} {:.4f} \
-                        {:.4f} {:.4f} {:.4f} \n'.format(x, y, z, r, g, b))
+                r,g,b = mesh_target.colors[i] * 255
+                f.write('{:.4f} {:.4f} {:.4f} \
+                        {:d} {:d} {:d} \n'.format(x, y, z, int(r), int(g), int(b)))
 
         # export_obj_cpu('canonical_source_%s.obj'%(prefix), canonical_source[0].detach().clone(), src_colors[0].detach().clone(), random_trans=[0,1.5,0])
         # export_obj_cpu('canonical_target_%s.obj'%(prefix), canonical_target[0].detach().clone(), tar_colors[0].detach().clone(), random_trans=[1.5,1.5,0])

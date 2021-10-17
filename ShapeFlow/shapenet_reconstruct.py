@@ -115,7 +115,7 @@ def get_args():
     parser.add_argument(
         "--input_path_1",
         type=str,
-        default="3dfuture_7_pc.ply",
+        default="source.ply",
         # default="/media/andy/Elements/Shapeflow_data/data/shapenet_simplified/val/03001627/c4f9249def12870a2b3e9b6eb52d35df/model.ply",
         # default="/media/andy/Elements/Shapeflow_data/data/shapenet_simplified/val/03001627/bcc73b8ff332b4df3d25ee35360a1f4d/model.ply",
         help="path to input points (.ply file).",
@@ -123,7 +123,7 @@ def get_args():
     parser.add_argument(
         "--input_path_2",
         type=str,
-        default="3dfuture_6_pc.ply",
+        default="target.ply",
         help="path to input points (.ply file).",
     )
 
@@ -140,7 +140,7 @@ def get_args():
         "-ne",
         "--embedding_niter",
         type=int,
-        default=30,
+        default=1,
         help="number of embedding iterations.",
     )
     parser.add_argument(
