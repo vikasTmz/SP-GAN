@@ -140,7 +140,7 @@ def get_args():
         "-ne",
         "--embedding_niter",
         type=int,
-        default=30,
+        default=15,
         help="number of embedding iterations.",
     )
     parser.add_argument(
@@ -256,7 +256,7 @@ def main():
     # embed
     embedder = LatentEmbedder(point_dataset, mesh_dataset, deformer, topk=5)
 
-    for i in range(0, mesh_1.vertices.shape[0],sample_points): #
+    for i in range(8192+sample_points, mesh_1.vertices.shape[0],sample_points): #
         print(i)
         points_1 = mesh_1.vertices[i:i+sample_points]    
         points_2 = mesh_2.vertices[i:i+sample_points]
