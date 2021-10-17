@@ -521,6 +521,7 @@ class LatentEmbedder(object):
         tar_colors = tar_colors.type(src_colors.dtype).to(src_colors.device)
         tar_colors[:,closests[:,0],:] = src_colors[:,indicies,:]
 
+        # Undo ShapeFlow transformations for compatibality with pre-trained DGCNN
         points = mesh_target.vertices #target_points[0].detach().clone().to("cpu").numpy()
         pointcloud = o3d.geometry.PointCloud()
         pointcloud.points = o3d.utility.Vector3dVector(points)
@@ -532,22 +533,22 @@ class LatentEmbedder(object):
         pointcloud_tr.rotate(R, center=pointcloud_tr.get_center())
 
         pc = np.asarray(pointcloud_tr.points)[start:end]
-        # with open('cond-pc_deformed_%s.obj'%(prefix), 'w') as f:
-        #     for i,p in enumerate(pc):
-        #         x,y,z = p
-        #         r,g,b = tar_colors[0,i]
-        #         if r != 0 and g != 0 and b != 0:
-        #             f.write('v {:.4f} {:.4f} {:.4f} \
-        #                     {:.4f} {:.4f} {:.4f} \n'.format(x, y, z, r, g, b))
-
-        with open('cond-pc_deformed_%s.ply'%(prefix), 'w') as f:
-            f.write(TEMPLATE%(pc.shape[0]))
+        with open('cond-pc_deformed_%s.obj'%(prefix), 'w') as f:
             for i,p in enumerate(pc):
                 x,y,z = p
-                r,g,b = tar_colors[0,i] * 255
-                if int(r) != 0 and int(g) != 0 and int(b) != 0:
-                    f.write('{:.4f} {:.4f} {:.4f} \
-                            {:d} {:d} {:d} \n'.format(x, y, z, int(r), int(g), int(b)))
+                r,g,b = tar_colors[0,i]
+                if r != 0 and g != 0 and b != 0:
+                    f.write('v {:.4f} {:.4f} {:.4f} \
+                            {:.4f} {:.4f} {:.4f} \n'.format(x, y, z, r, g, b))
+
+        # with open('cond-pc_deformed_%s.ply'%(prefix), 'w') as f:
+        #     f.write(TEMPLATE%(pc.shape[0]))
+        #     for i,p in enumerate(pc):
+        #         x,y,z = p
+        #         r,g,b = tar_colors[0,i] * 255
+        #         if int(r) != 0 and int(g) != 0 and int(b) != 0:
+        #             f.write('{:.4f} {:.4f} {:.4f} \
+        #                     {:d} {:d} {:d} \n'.format(x, y, z, int(r), int(g), int(b)))
 
         pc = np.asarray(pointcloud_tr.points)
         # with open('%s'%('geom-pc.obj'), 'w') as f:
